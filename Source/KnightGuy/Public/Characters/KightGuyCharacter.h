@@ -4,6 +4,7 @@
 
 #include "CoreMinimal.h"
 #include "GameFramework/Character.h"
+#include "Weapons/KnightGuyWeapon.h"
 #include "KightGuyCharacter.generated.h"
 
 UCLASS()
@@ -21,10 +22,25 @@ public:
 	UPROPERTY(VisibleAnywhere, BlueprintReadOnly, Category = Camera, meta = (AllowPrivateAccess = "true"))
 		class USpringArmComponent* CameraBoom;
 
+	/** Weapon For The Character */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadWrite, Category = Weapon, meta = (AllowPrivateAccess = "true"))
+		TSubclassOf<AKnightGuyWeapon> Weapon;
+
 protected:
+
+	virtual void BeginPlay() override;
 
 	// Called to bind functionality to input
 	virtual void SetupPlayerInputComponent(class UInputComponent* PlayerInputComponent) override;
+
+private:
+
+	/** Called for Attack input */
+	void AttackPressed();
+
+	/** Called for Attack input */
+	void AttackReleased();
+
 
 	/** Called for side to side input */
 	void MoveRight(float Value);
@@ -36,5 +52,9 @@ public:
 	FORCEINLINE class USpringArmComponent* GetCameraBoom() const { return CameraBoom; }
 
 private:
+
+	/** Attack Animation Bool For The Character */
+	UPROPERTY(EditDefaultsOnly, BlueprintReadOnly, Category = Weapon, meta = (AllowPrivateAccess = "true"))
+		bool bDoAttack;
 
 };

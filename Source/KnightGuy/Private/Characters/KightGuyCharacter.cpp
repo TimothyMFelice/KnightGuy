@@ -8,6 +8,7 @@
 #include "Components/InputComponent.h"
 #include "GameFramework/SpringArmComponent.h"
 #include "GameFramework/CharacterMovementComponent.h"
+#include "TimerManager.h"
 
 
 // Sets default values
@@ -53,6 +54,20 @@ AKightGuyCharacter::AKightGuyCharacter(const FObjectInitializer& ObjectInitializ
 //////////////////////////////////////////////////////////////////////////
 // Input
 
+void AKightGuyCharacter::BeginPlay()
+{
+	Super::BeginPlay();
+
+	UE_LOG(LogTemp, Warning, TEXT("Spawn"));
+
+	// Create a weapon
+	const FVector Location = GetMesh()->GetSocketLocation("WeaponHold");;
+	const FRotator Rotation = FRotator(0, 0, 0);
+
+	AActor * NewActor = GetWorld()->SpawnActor(Weapon, &Location, &Rotation);
+	NewActor->AttachToComponent(GetMesh(), FAttachmentTransformRules::SnapToTargetIncludingScale, "WeaponHold");
+}
+
 // Called to bind functionality to input
 void AKightGuyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputComponent)
 {
@@ -61,8 +76,32 @@ void AKightGuyCharacter::SetupPlayerInputComponent(UInputComponent* PlayerInputC
 	// set up gameplay key bindings
 	PlayerInputComponent->BindAction("Jump", IE_Pressed, this, &ACharacter::Jump);
 	PlayerInputComponent->BindAction("Jump", IE_Released, this, &ACharacter::StopJumping);
+
+	PlayerInputComponent->BindAction("Attack", IE_Pressed, this, &AKightGuyCharacter::AttackPressed);
+	//PlayerInputComponent->BindAction("Attack", IE_Released, this, &AKightGuyCharacter::AttackReleased);
+
 	PlayerInputComponent->BindAxis("MoveRight", this, &AKightGuyCharacter::MoveRight);
 
+}
+
+void AKightGuyCharacter::AttackPressed()
+{
+	bDoAttack = true;
+
+	GetCharacterMovement()->DisableMovement();
+	GetCharacterMovement()->StopMovementImmediately();
+
+	FTimerHandle UniqueHandle;
+	FTimerDelegate RespawnDelegate = FTimerDelegate::CreateUObject(this, &AKightGuyCharacter::AttackReleased);
+	GetWorldTimerManager().SetTimer(UniqueHandle, RespawnDelegate, 1.0f, false);
+}
+
+void AKightGuyCharacter::AttackReleased()
+{
+	bDoAttack = false;
+
+	GetCharacterMovement()->SetMovementMode(EMovementMode::MOVE_Walking);
+	GetCharacterMovement()->StopMovementImmediately();
 }
 
 void AKightGuyCharacter::MoveRight(float Value)
